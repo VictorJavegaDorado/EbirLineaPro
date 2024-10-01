@@ -1,0 +1,380 @@
+/* App.css */
+
+/* Estilos generales */
+.app-container {
+  font-family: Arial, sans-serif;
+  color: #333;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Centrar contenido en la pantalla de selección */
+.pantalla-seleccion {
+  max-width: 1600px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Estilos para las etiquetas de selección */
+.pantalla-seleccion label {
+  font-weight: bold;
+  display: block;
+  margin: 10px 0 5px;
+}
+
+.pantalla-seleccion select {
+  padding: 8px;
+  width: 200px;
+  margin-bottom: 20px;
+}
+
+/* Estilos adicionales para títulos principales */
+h1,
+h2,
+h3 {
+  text-align: center;
+  color: #041049;
+  margin-bottom: 20px;
+}
+
+/* Contenedor de operarios */
+.operarios-container {
+  display: flex;  flex-wrap: wrap;
+  justify-content: center;
+  margin: 20px 0;
+  gap: 15px;
+}
+
+/* Controles de línea */
+.line-controls {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 20px 0;
+  margin-top: -180px;
+  height: 60px;
+}
+
+.line-controls button {
+  padding: 25px 40px;
+  background-color: #ff9822;
+  color: white;
+font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+
+.line-controls .fin-button {
+  background-color: #6ed66e;
+  color: white;
+}
+
+.line-controls .fin-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.line-controls .incidencia-button {
+  background-color: rgb(222, 80, 80);
+  color: white;
+  
+}
+
+.line-controls button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+/* Botones de Confirmación */
+.confirmar-button {
+  padding: 10px 20px;
+  margin-top: 20px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.confirmar-button:hover {
+  background-color: #45a049;
+}
+
+/* Ventanas emergentes */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  padding: 30px 20px;
+  margin-top: 10px;
+  margin-right: 10px; /* Añade espacio a la derecha */
+  margin-bottom: 10px; /* Opcional: Añade espacio debajo de cada botón */
+  border: 5px solid rgb(18, 24, 58); /* Corregido para hacer visible el borde */
+  border-radius: 5px;
+  cursor: pointer;
+  transition: opacity 0.3s;
+  color: rgb(15, 32, 64);
+  background-color: #ffffff;
+  font-weight: bold;
+  border-radius: 20px;
+  font-size: x-large;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+}
+
+.modal-content input[type="checkbox"] {
+  width: 20px; /* Cambia el ancho si es necesario */
+  height: 20px; /* Cambia la altura si es necesario */
+  transform: scale(1.5); /* Aumenta el tamaño del checkbox */
+  margin-right: 10px; /* Espacio entre el checkbox y el texto */
+}
+.modal-content button {
+  padding: 15px 40px; /* Aumenta el espacio interno del botón */
+  font-size: 28px; /* Aumenta el tamaño del texto */
+  margin-right: 140px; /* Espacio entre los botones */
+  border: 1px solid black;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: opacity 0.3s;
+  background-color: #041049;
+  color: #ffffff;
+}
+
+
+
+.modal-content label,
+.selector-container {
+  display: block;
+  margin-bottom: 30px;
+  
+  
+
+}
+.input-text{
+  color: rgb(255, 0, 0);
+  width: 25%; /* Ajusta el ancho al 100% del contenedor, puedes cambiar a un valor fijo como 300px */
+  height: 30px; /* Ajusta la altura a tu preferencia */
+  padding: 10px; /* Agrega espacio dentro del input */
+  font-size: 30px; /* Aumenta el tamaño del texto dentro del input */
+  border-radius: 10px; /* Bordes redondeados */
+  border: 4px solid #12143e; /* Define el estilo del borde */
+  margin-left: 50px;
+}
+
+.selector-adicional-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1px; /* Ajusta este valor según el espacio */
+  gap: 5px;
+  padding: 10px;
+  background-color: #ff9822; /* Un color de fondo para darle estilo */
+  border-radius: 5px;
+}
+.selector-adicional-container label {
+  font-weight: bold;
+  margin-right: 10px;
+  color: #151e4d; /* Un color azul profesional */
+}
+
+.selector-adicional-container select {
+  padding: 10px 20px;
+  border: 2px solid #1d254e; /* Borde estilizado */
+  border-radius: 5px;
+  font-size: 16px;
+  background-color: #f5f5f5; /* Fondo ligero */
+  color: #041049; /* Texto acorde al esquema de color */
+}
+
+.selector-adicional-container select:focus {
+  outline: none;
+  border-color: #3f51b5; /* Resaltar cuando esté en foco */
+}
+
+.selector-adicional-container button {
+  padding: 10px 20px;
+  border: 2px solid #1a224b;
+  border-radius: 5px;
+  background-color: #3f3b77; /* Fondo azul oscuro */
+  color: rgb(255, 255, 255);
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.selector-adicional-container button:hover {
+  background-color: #3f51b5; /* Color más claro al pasar el ratón */
+}
+.selector-adicional-container select, 
+.selector-adicional-container button {
+  padding: 8px;
+  font-size: 14px; /* Ajusta el tamaño de fuente */
+}
+
+
+
+.modal-content button:hover {
+  opacity: 0.8;
+  color: #405186;
+}
+
+/* Sección de Videos */
+.video-section {
+  margin-top: 30px;
+  width: 1600px;
+}
+
+.video-selector {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.video-selector select {
+  padding: 5px;
+  width: 400px;
+}
+
+.video-player {
+  width: 100%;
+}
+
+.video-player > div {
+  position: relative;
+  padding-top: 56.25%;
+}
+
+.video-player > div > iframe,
+.video-player > div > video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Fondo con gradiente */
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(180deg, #174B6C 5%, #ffffff 80%);
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Contenedor principal */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  text-align: center;
+  color: rgb(0, 0, 0);
+  margin-top: -45px;
+}
+
+
+/* Pantalla de selección */
+.pantalla-seleccion {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  padding: 40px;
+  box-shadow: 0px 4px 30px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  width: 100%;
+}
+
+/* Títulos */
+h2 {
+  font-size: 32px;
+  color: #041049;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+/* Selectores */
+.selector-container select {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #041049;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  font-size: 16px;
+  font-family: 'Poppins', sans-serif;
+  transition: border-color 0.3s ease;
+}
+
+.selector-container select:focus {
+  outline: none;
+  border-color: #614d8a;
+}
+
+/* Botón Confirmar */
+.confirmar-button {
+  padding: 12px 25px;
+  background-color: #4caf50;
+  color: white;
+  font-size: 18px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-weight: bold;
+}
+
+.confirmar-button:hover {
+  background-color: #45a049;
+}
+
+/* Mejora de espaciado */
+.selector-container {
+  margin-bottom: 20px;
+}
+
+/* Espacio entre el selector y el botón */
+.selector-container:last-child {
+  margin-bottom: 30px;
+}
+
+/* Agrega una sombra sutil al botón */
+.confirmar-button {
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.center-text {
+  background-color: rgba(255, 255, 255, 0.9); /* Fondo blanco semi-transparente */
+  padding: 10px; /* Reducir padding */
+  border-radius: 8px; /* Bordes redondeados */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+  border: 1px solid #ccc; /* Borde fino */
+  text-align: left; /* Alineación de texto a la izquierda */
+  font-size: 14px; /* Reducir tamaño de fuente */
+  margin: 0 10px; /* Margen entre los elementos */
+  align-items: center;
+  display: inline-flex;
+}
+
+.corner-logo {
+  position: absolute;
+  top: -40px; /* Ajusta este valor para la distancia desde arriba */
+  right: 20px; /* Ajusta este valor para la distancia desde la derecha */
+  width: auto; /* Ajusta el tamaño del logo según tu preferencia */
+  height: auto; /* Mantén el aspecto del logo */
+  z-index: 100; /* Asegura que esté por encima de otros elementos */
+}
