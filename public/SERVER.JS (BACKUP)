@@ -1,0 +1,405 @@
+// server.js
+
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
+const db = require('./db');
+const app = express();
+const port = 3000;
+
+app.use(cors());
+app.use(express.json());
+
+const videosPath = '/mnt/videos';
+
+app.get('/api/videos', (req, res) => {
+  fs.readdir(videosPath, (err, files) => {
+    if (err) {
+      console.error('Error al leer la carpeta de videos:', err);
+      return res.status(500).json({ mensaje: 'Error al obtener la lista de videos' });
+    }
+
+    const videoFiles = files.filter((file) => {
+      return ['.mp4', '.webm', '.ogg'].includes(path.extname(file).toLowerCase());
+    });
+
+    res.status(200).json(videoFiles);
+  });
+});
+
+app.use('/videos', express.static(videosPath));
+
+function formatDateForMySQL(date) {
+  const pad = (n) => (n < 10 ? '0' + n : n);
+  return (
+    date.getFullYear() +
+    '-' +
+    pad(date.getMonth() + 1) +
+    '-' +
+    pad(date.getDate()) +
+    ' ' +
+    pad(date.getHours()) +
+    ':' +
+    pad(date.getMinutes()) +
+    ':' +
+    pad(date.getSeconds())
+  );
+}
+
+
+//traer operarios_definidos
+
+
+// Endpoint para obtener todos los operarios
+app.get('/api/operarios_definidos', async (req, res) => {
+  try {
+    const [rows] = await db.execute('SELECT * FROM operarios_definidos');
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error al obtener los operarios:', error);
+    res.status(500).json({
+      mensaje: 'Error al obtener los operarios',
+      error: error.message,
+    });
+  }
+});
+
+// Endpoint para obtener las asignaciones de línea y turno con supervisores y operarios
+app.get('/api/asignaciones', async (req, res) => {
+  const { linea, turno } = req.query;
+
+  if (!linea || !turno) {
+    return res.status(400).json({
+      mensaje: 'Parámetros "linea" y "turno" son requeridos',
+    });
+  }
+
+  try {
+    const idTurno = turno === 'Mañana' ? 0 : 1;
+
+    // Obtener los supervisores
+    const [supervisors] = await db.execute(
+      'SELECT * FROM operarios_definidos WHERE isSupervisor = 1 AND lineaAsignada = ? AND idTurno = ?',
+      [linea, idTurno]
+    );
+
+    // Obtener los operarios
+    const [operatives] = await db.execute(
+      'SELECT * FROM operarios_definidos WHERE isSupervisor = 0 AND lineaAsignada = ? AND idTurno = ?',
+      [linea, idTurno]
+    );
+
+    res.status(200).json({
+      supervisors,
+      operatives,
+    });
+  } catch (error) {
+    console.error('Error al obtener las asignaciones:', error);
+    res.status(500).json({
+      mensaje: 'Error al obtener las asignaciones',
+      error: error.message,
+    });
+  }
+});
+
+
+//traer lineas
+// Endpoint para obtener las líneas de montaje
+
+app.get('/api/lineas', async (req, res) => {
+  try {
+    // Aquí obtienes las líneas ordenadas por 'id'
+    const [lineas] = await db.execute('SELECT id, nombre FROM lineas_montaje ORDER BY id ASC');
+    res.status(200).json(lineas);
+  } catch (error) {
+    console.error('Error al obtener las líneas de montaje:', error);
+    res.status(500).json({
+      mensaje: 'Error al obtener las líneas de montaje',
+      error: error.message,
+    });
+  }
+});
+
+
+
+
+
+
+
+async function actualizarEstadoLinea(linea, estado, motivo = null) {
+  const fechaActual = formatDateForMySQL(new Date());
+  try {
+    const [rows] = await db.execute('SELECT * FROM estados_lineas WHERE linea = ?', [linea]);
+    if (rows.length > 0) {
+      await db.execute(
+        'UPDATE estados_lineas SET estado = ?, ultimaActualizacion = ?, motivo = ? WHERE linea = ?',
+        [estado, fechaActual, motivo, linea]
+      );
+    } else {
+      await db.execute(
+        'INSERT INTO estados_lineas (linea, estado, ultimaActualizacion, motivo) VALUES (?, ?, ?, ?)',
+        [linea, estado, fechaActual, motivo]
+      );
+    }
+    console.log(`Estado de la línea '${linea}' actualizado a '${estado}' con motivo '${motivo}'.`);
+  } catch (error) {
+    console.error(`Error al actualizar el estado de la línea '${linea}':`, error);
+    throw error;
+  }
+}
+
+app.get('/api/operarios', async (req, res) => {
+  try {
+    const [rows] = await db.execute('SELECT * FROM operarios_definidos');
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error al obtener los operarios:', error);
+    res.status(500).json({
+      mensaje: 'Error al obtener los operarios',
+      error: error.message,
+    });
+  }
+});
+
+app.get('/api/operarios_definidos', async (req, res) => {
+  const { linea, turno } = req.query;
+
+  if (!linea || !turno) {
+    return res.status(400).json({
+      mensaje: 'Parámetros "linea" y "turno" son requeridos',
+    });
+  }
+
+  try {
+    const [rows] = await db.execute(
+      'SELECT * FROM operarios_definidos WHERE lineaAsignada = ? AND idTurno = ?',
+      [linea, turno === 'Mañana' ? 0 : 1]
+    );
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error al obtener los operarios definidos:', error);
+    res.status(500).json({
+      mensaje: 'Error al obtener los operarios definidos',
+      error: error.message,
+    });
+  }
+});
+
+app.post('/api/ordenes/iniciar', async (req, res) => {
+  console.log('Datos recibidos para iniciar la orden:', req.body);
+
+  const { linea, turno, numeroOrden, resumen, fechaInicio } = req.body;
+
+  try {
+    if (!Array.isArray(resumen) || resumen.length === 0) {
+      return res.status(400).json({
+        mensaje: 'El resumen de operarios es obligatorio y debe contener al menos un operario.',
+      });
+    }
+
+    const fechaInicioDate = new Date(fechaInicio);
+    const fechaInicioFormatted = formatDateForMySQL(fechaInicioDate);
+
+    const [ordenResult] = await db.execute(
+      'INSERT INTO ordenes (linea, turno, numeroOrden, fechaInicio, fechaFinalizacion) VALUES (?, ?, ?, ?, NULL)',
+      [linea, turno, numeroOrden, fechaInicioFormatted]
+    );
+
+    const ordenId = ordenResult.insertId;
+
+    const fechaActual = formatDateForMySQL(new Date());
+    const operariosData = resumen.map((op) => [
+      op.nombre,
+      op.tiempoTotal,
+      op.tiempoDescanso,
+      numeroOrden,
+      ordenId,
+      fechaActual,
+    ]);
+
+    console.log('Datos a insertar en operarios:', operariosData);
+
+    await db.query(
+      'INSERT INTO operarios (nombre, tiempoTotal, tiempoDescanso, numeroOrden, ordenId, fecha) VALUES ?',
+      [operariosData]
+    );
+
+    await actualizarEstadoLinea(linea, 'trabajando');
+
+    res.status(200).json({ mensaje: 'Orden iniciada y guardada correctamente' });
+  } catch (error) {
+    console.error('Error al iniciar la orden:', error);
+    res.status(500).json({
+      mensaje: 'Error al iniciar la orden',
+      error: error.message,
+    });
+  }
+});
+
+app.post('/api/ordenes/pausar', async (req, res) => {
+  console.log('Datos recibidos para pausar la línea:', req.body);
+
+  const { linea, motivo } = req.body;
+
+  try {
+    await actualizarEstadoLinea(linea, 'pausado', motivo);
+
+    res.status(200).json({ mensaje: `Línea '${linea}' pausada correctamente. Motivo: ${motivo}` });
+  } catch (error) {
+    console.error('Error al pausar la línea:', error);
+    res.status(500).json({
+      mensaje: 'Error al pausar la línea',
+      error: error.message,
+    });
+  }
+});
+
+app.post('/api/ordenes/reanudar', async (req, res) => {
+  console.log('Datos recibidos para reanudar la línea:', req.body);
+
+  const { linea } = req.body;
+
+  try {
+    if (!linea) {
+      return res.status(400).json({ mensaje: 'Falta el parámetro "linea".' });
+    }
+
+    await actualizarEstadoLinea(linea, 'trabajando');
+
+    res.status(200).json({ mensaje: `Línea '${linea}' reanudada correctamente.` });
+  } catch (error) {
+    console.error('Error al reanudar la línea:', error);
+    res.status(500).json({
+      mensaje: 'Error al reanudar la línea',
+      error: error.message,
+    });
+  }
+});
+
+app.post('/api/ordenes/finalizar', async (req, res) => {
+  console.log('Datos recibidos para finalizar la orden:', req.body);
+
+  const { linea, turno, numeroOrden, resumen, fechaInicio } = req.body;
+  const fechaFinalizacion = new Date();
+
+  try {
+    if (!Array.isArray(resumen) || resumen.length === 0) {
+      return res.status(400).json({
+        mensaje: 'El resumen de operarios es obligatorio y debe contener al menos un operario.',
+      });
+    }
+
+    const fechaInicioDate = new Date(fechaInicio);
+    const fechaInicioFormatted = formatDateForMySQL(fechaInicioDate);
+    const fechaFinalizacionFormatted = formatDateForMySQL(fechaFinalizacion);
+
+    const [existingOrders] = await db.execute(
+      'SELECT id FROM ordenes WHERE linea = ? AND turno = ? AND numeroOrden = ? AND fechaInicio = ?',
+      [linea, turno, numeroOrden, fechaInicioFormatted]
+    );
+
+    if (existingOrders.length === 0) {
+      return res.status(404).json({
+        mensaje: 'No se encontró una orden en curso para finalizar.',
+      });
+    }
+
+    const ordenId = existingOrders[0].id;
+
+    await db.execute(
+      'UPDATE ordenes SET fechaFinalizacion = ? WHERE id = ?',
+      [fechaFinalizacionFormatted, ordenId]
+    );
+
+    const fechaActual = formatDateForMySQL(new Date());
+    const operariosData = resumen.map((op) => [
+      op.nombre,
+      op.tiempoTotal,
+      op.tiempoDescanso,
+      numeroOrden,
+      ordenId,
+      fechaActual,
+    ]);
+
+    console.log('Datos a insertar en operarios:', operariosData);
+
+    await db.query(
+      'INSERT INTO operarios (nombre, tiempoTotal, tiempoDescanso, numeroOrden, ordenId, fecha) VALUES ?',
+      [operariosData]
+    );
+
+    await actualizarEstadoLinea(linea, 'libre');
+
+    res.status(200).json({ mensaje: 'Orden finalizada y guardada correctamente' });
+  } catch (error) {
+    console.error('Error al finalizar la orden:', error);
+    res.status(500).json({
+      mensaje: 'Error al finalizar la orden',
+      error: error.message,
+    });
+  }
+});
+
+app.post('/api/ordenes/en_curso', async (req, res) => {
+  const { linea, turno, numeroOrden } = req.body;
+  try {
+    const [ordenes] = await db.execute(
+      'SELECT * FROM ordenes WHERE linea = ? AND turno = ? AND numeroOrden = ? AND fechaFinalizacion IS NULL',
+      [linea, turno, numeroOrden]
+    );
+
+    if (ordenes.length > 0) {
+      const orden = ordenes[0];
+
+      const [operarios] = await db.execute(
+        'SELECT * FROM operarios WHERE ordenId = ?',
+        [orden.id]
+      );
+
+      res.status(200).json({
+        existe: true,
+        orden,
+        operarios,
+      });
+    } else {
+      res.status(200).json({
+        existe: false,
+      });
+    }
+  } catch (error) {
+    console.error('Error al verificar la orden en curso:', error);
+    res.status(500).json({
+      mensaje: 'Error al verificar la orden en curso',
+      error: error.message,
+    });
+  }
+});
+
+app.get('/api/operarios_definidos', async (req, res) => {
+  const { linea, turno } = req.query;
+
+  if (!linea || !turno) {
+    return res.status(400).json({
+      mensaje: 'Parámetros "linea" y "turno" son requeridos',
+    });
+  }
+
+  try {
+    const [rows] = await db.execute(
+      'SELECT * FROM operarios_definidos WHERE lineaAsignada = ? AND idTurno = ?',
+      [linea, turno === 'Mañana' ? 0 : 1]
+    );
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error al obtener los operarios definidos:', error);
+    res.status(500).json({
+      mensaje: 'Error al obtener los operarios definidos',
+      error: error.message,
+    });
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Servidor backend escuchando en http://localhost:${port}`);
+});

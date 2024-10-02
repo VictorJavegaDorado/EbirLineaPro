@@ -9,7 +9,7 @@ function Home({ selectedUsers, setSelectedUsers, setOrderStarted, setOrderStartT
 
   // Obtener la lista de usuarios desde la API al montar el componente
   useEffect(() => {
-    fetch('http://10.1.1.112:3000/api/operarios_definidos')
+    fetch('http://192.168.0.31:3000/api/operarios_definidos')
       .then((response) => response.json())
       .then((data) => setUsers(data))
       .catch((error) => console.error('Error al obtener los operarios:', error));

@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import '../Operario.css'; // Asegúrate de tener estilos adecuados
 
-const API_BASE_URL = 'http://10.1.1.112:3000';
+const API_BASE_URL = 'http://192.168.0.31:3000';
 
 const Operario = ({
   operario,

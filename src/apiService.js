@@ -1,5 +1,5 @@
 // apiService.js
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://10.1.1.112:3000';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://192.168.0.31:3000';
 
 const fetchData = async (endpoint, method = 'GET', body = null) => {
   const url = `${API_BASE_URL}/api/${endpoint}`;

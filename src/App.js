@@ -6,7 +6,7 @@ import Swal from 'sweetalert2';
 import ReactPlayer from 'react-player';
 import './App.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://10.1.1.112:3000';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://192.168.0.31:3000';
 
 const App = () => {
   // Estados principales
@@ -64,7 +64,7 @@ const App = () => {
     fetchLineas();
   }, []);
 
-  // Fetch operarios y videos
+  // Fetch operarios
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -90,6 +90,8 @@ const App = () => {
           }))
         );
 
+
+        //videos
         const responseVideos = await fetch(`${API_BASE_URL}/api/videos`);
         const videosData = await responseVideos.json();
         setVideosDisponibles(videosData);
@@ -450,17 +452,33 @@ const verificarOrdenEnCurso = () => {
   };
 
   // Manejar el envío del formulario inicial
+  
   const handleSubmit = () => {
-    if (linea && turno) {
-      const operariosFiltrados = operarios
-        .filter((op) => op.lineaAsignada === linea && op.turno === turno)
-        .map((op) => ({
-          ...op,
-          seleccionado: true,
-        }));
 
-      setOperariosSeleccionados(operariosFiltrados);
-      setPantallaInicial(false);
+    console.log('Operarios disponibles:', operarios);
+  console.log('Línea seleccionada:', linea);
+  console.log('Turno seleccionado:', turno);
+
+    if (linea && turno) {
+     const operariosFiltrados = operarios
+  .filter((op) => String(op.lineaAsignada) === String(linea) && op.turno === (turno === 'Mañana' ? 5 : 6))
+  .map((op) => ({
+    ...op,
+    seleccionado: true,
+  }));
+
+  
+      if (operariosFiltrados.length > 0) {
+        setOperariosSeleccionados(operariosFiltrados);
+        setPantallaInicial(false); // Cambia a la siguiente pantalla si hay operarios
+      } else {
+        Swal.fire({
+          title: 'No hay operarios',
+          text: 'No se encontraron operarios para la línea y turno seleccionados.',
+          icon: 'warning',
+          confirmButtonText: 'Aceptar',
+        });
+      }
     } else {
       Swal.fire({
         title: 'Faltan datos',
@@ -470,6 +488,7 @@ const verificarOrdenEnCurso = () => {
       });
     }
   };
+  
 
   // Función para manejar la selección de operarios
   const toggleSeleccionarOperario = (id) => {
@@ -775,14 +794,17 @@ useEffect(() => {
 
           <div className="selector-container">
             <label>Línea de Montaje: </label>
+          
             <select value={linea} onChange={(e) => setLinea(e.target.value)}>
-              <option value="">Selecciona una línea</option>
-              {lineas.map((lineaItem, index) => (
-                <option key={index} value={lineaItem}>
-                  {lineaItem}
-                </option>
-              ))}
-            </select>
+  <option value="">Selecciona una línea</option>
+  {lineas.map((lineaItem) => (
+    <option key={lineaItem.id} value={lineaItem.id}>
+      {lineaItem.nombre}
+    </option>
+  ))}
+</select>
+
+
           </div>
 
           <div className="selector-container">
@@ -1199,7 +1221,7 @@ useEffect(() => {
                       finalizarDescansoOperario={finalizarDescansoOperario}
                       iniciarIncidenciaOperario={iniciarIncidenciaOperario}
                       formatTime={formatTime}
-                      removerOperario={handleRemoverOperario} // Pasar la función de remover
+                      removerOperario={handleRemoverOperario}
                     />
                   ))}
               
